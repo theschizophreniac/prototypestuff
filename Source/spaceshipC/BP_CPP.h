@@ -14,4 +14,7 @@ class SPACESHIPC_API UBP_CPP : public UBlueprintFunctionLibrary
 public:
     UFUNCTION(BlueprintCallable, Category="Spaceship")
     static FVector CalulateDirection(FVector Forward);
+
+    UFUNCTION(BlueprintCallable, Category="Spaceship")
+    static FVector Gravity(AActor* Actor, AActor* ASelf);
 };
