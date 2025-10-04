@@ -6,6 +6,22 @@
 
 class ABP_Spaceship;
 
+USTRUCT(BlueprintType)
+struct FDualVector
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector Gravity;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector Torque;
+
+    FDualVector()
+    : Gravity(FVector::ZeroVector), Torque(FVector::ZeroVector) {}
+};
+
+
 UCLASS()
 class SPACESHIPC_API UBP_CPP : public UBlueprintFunctionLibrary
 {
@@ -16,5 +32,5 @@ public:
     static FVector CalulateDirection(FVector Forward);
 
     UFUNCTION(BlueprintCallable, Category="Spaceship")
-    static FVector Gravity(AActor* Actor, AActor* ASelf);
+    static FDualVector Gravity(UPrimitiveComponent* OtherBody, UPrimitiveComponent* SelfBody);
 };

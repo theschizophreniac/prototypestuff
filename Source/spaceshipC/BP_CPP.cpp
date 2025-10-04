@@ -20,25 +20,27 @@ FVector UBP_CPP::CalulateDirection(FVector Forward)
     return FVector(YawDegrees, PitchDegrees, 0.f);
 }
 
-FVector UBP_CPP::Gravity(AActor* Actor, AActor* ASelf)
+FDualVector UBP_CPP::Gravity(UPrimitiveComponent *OtherBody, UPrimitiveComponent *SelfBody)
 {
+    FDualVector Result;
+    //not sure how to expose a variable
+    //in a blueprint function, this ought to do methinks?
     const float G = 1.f;
-    UPrimitiveComponent* Root1 = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
-    UPrimitiveComponent* Root2 = Cast<UPrimitiveComponent>(ASelf->GetRootComponent());
+    const float RotationPower = 10000.f;
 
-    if (!Root1 || !Root2) return FVector::ZeroVector;
-    if (!Root1->IsSimulatingPhysics() || !Root2->IsSimulatingPhysics()) return FVector::ZeroVector;
+    if (!OtherBody || !SelfBody) return FDualVector();
+    if (!OtherBody->IsSimulatingPhysics() || !SelfBody->IsSimulatingPhysics()) return FDualVector();
 
-    float Mass1 = Root1->GetMass();
-    float Mass2 = Root2->GetMass();
+    const float Mass1 = OtherBody->GetMass();
+    const float Mass2 = SelfBody->GetMass();
 
-    FVector Delta = (ASelf->GetActorLocation() - Actor->GetActorLocation());
+    FVector Delta = (SelfBody->GetComponentLocation() - OtherBody->GetComponentLocation());
     FVector Direction = Delta.GetSafeNormal();
 
     // Convert to meters
     float DistanceSq = (Delta.Size() / 100.f) * (Delta.Size() / 100.f);
 
-    if (DistanceSq <= KINDA_SMALL_NUMBER) return FVector::ZeroVector;
+    if (DistanceSq <= KINDA_SMALL_NUMBER) return FDualVector();
 
     /* 
         m1 * m2 / r^2 * g = einstein i thinK? idk...
@@ -46,7 +48,15 @@ FVector UBP_CPP::Gravity(AActor* Actor, AActor* ASelf)
     */
     float ForceMagnitude = (G * Mass1 * Mass2) / DistanceSq;
 
-    return Direction * ForceMagnitude;
+    Result.Gravity = Direction * ForceMagnitude;
+
+    // this is the curve of objects
+
+    FVector Forward = OtherBody->GetForwardVector();
+    FVector Desired = Forward ^ Direction;
+
+    float rotatePower = FVector::DotProduct(Forward, Desired);
+
+    Result.Torque = (RotationPower * Desired) / DistanceSq;
+    return Result;
 }
-
-
